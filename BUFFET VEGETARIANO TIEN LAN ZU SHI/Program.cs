@@ -6,6 +6,9 @@ using TIEN_LAN_ZU_SHI.Business.Interfaces;
 using TIEN_LAN_ZU_SHI.Business.Services;
 using TIEN_LAN_ZU_SHI.DataAccess.Interfaces;
 using TIEN_LAN_ZU_SHI.DataAccess.Repositories;
+using TIEN_LAN_ZU_SHI.Configurations;
+using TIEN_LAN_ZU_SHI.Middlewares;
+using TIEN_LAN_ZU_SHI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,8 +17,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", policy =>
     {
         policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+            .AllowAnyHeader()
+            .AllowAnyMethod();
     });
 });
 
@@ -48,6 +51,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 
     // 2. Añade el requisito de seguridad (Security Requirement) 
+ 
     // Esto le dice a Swagger que debe aplicar el esquema "Bearer" a los endpoints. 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
@@ -129,7 +133,9 @@ builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddScoped<IMovementInventoryRepository, MovementInventoryRepository>();
 builder.Services.AddScoped<IMovementInventoryService, MovementInventoryService>();
 
-
+builder.Services.Configure<MongoLogSettings>(
+builder.Configuration.GetSection("MongoLogSettings"));
+builder.Services.AddSingleton<ILogService, MongoLogService>();
 
 
 var app = builder.Build();
@@ -146,6 +152,8 @@ app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 
 app.UseAuthentication();
+
+app.UseMiddleware<AuditLoggingMiddleware>();  
 
 app.UseAuthorization();
 

@@ -129,6 +129,7 @@ namespace TIEN_LAN_ZU_SHI.Business.Services
                         };
 
                     default:
+                    Console.WriteLine($"[Register] Código {repoResponse.OperationStatusCode}: {repoResponse.Message}");
                         return new ServiceResponse<User>
                         {
                             Data = null,
@@ -238,18 +239,29 @@ namespace TIEN_LAN_ZU_SHI.Business.Services
             try
             {
                 //validar si existe el usuario con el nombre proporcionado
-                var existentUser = await _authRepository.GetByUserNameAsync(loginRequest.UserName);
+var existentUser = await _authRepository.GetByUserNameAsync(loginRequest.UserName);
 
-                if (existentUser.Data!.Id == 0 && existentUser.Data!.UserName.IsNullOrEmpty())
-                {
-                    return new ServiceResponse<LoginResponseDto>
-                    {
-                        Data = null,
-                        IsSuccess = false,
-                        MessageCode = MessageCodes.Unauthorized,
-                        Message = "No existe usuario registrado con el username proporcionado"
-                    };
-                }
+if (existentUser.Data == null)
+{
+    Console.WriteLine($"[Login] Repo falló. Código {existentUser.OperationStatusCode}: {existentUser.Message}");
+    return new ServiceResponse<LoginResponseDto>
+    {
+        Data = null,
+        IsSuccess = false,
+        MessageCode = MessageCodes.ErrorDataBase,
+        Message = "No se pudo consultar la base de datos"
+    };
+}
+if (existentUser.Data.Id == 0 || string.IsNullOrEmpty(existentUser.Data.UserName))
+{
+    return new ServiceResponse<LoginResponseDto>
+    {
+        Data = null,
+        IsSuccess = false,
+        MessageCode = MessageCodes.Unauthorized,
+        Message = "No existe usuario registrado con el username proporcionado"
+    };
+}
 
                 //validar el password
                 var isValidPassword = BCrypt.Net.BCrypt.Verify(loginRequest.Password, existentUser.Data.PasswordHash);
@@ -290,8 +302,9 @@ namespace TIEN_LAN_ZU_SHI.Business.Services
                 };
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine($"[Login] {ex}");
                 return new ServiceResponse<LoginResponseDto>
                 {
                     Data = null,

@@ -121,14 +121,17 @@ namespace TIEN_LAN_ZU_SHI.DataAccess.Repositories
             }
             catch (SqlException ex)
             {
-                response.Data = null;
-                response.OperationStatusCode = ex.Number;
-                return response;
+                    Console.WriteLine($"[Repo GetByUserName] SQL {ex.Number}: {ex.Message}");
+                    response.Data = null;
+                    response.OperationStatusCode = ex.Number;
+                    response.Message = ex.Message;
+                    return response;
             }
 
             ////
             catch (Exception ex)
             {
+                Console.WriteLine($"[Repo GetByUserName] {ex}");
                 return new RepositoryResponse<User>
                 {
                     Data = null,
